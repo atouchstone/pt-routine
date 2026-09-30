@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="PT Routine">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="theme-color" content="#0f172a">
+<link rel="apple-touch-icon" href="icon.png">
+<title>PT Routine</title>
+<style>
+:root{--bg:#0f172a;--card:#1e293b;--ink:#f1f5f9;--mut:#94a3b8;--acc:#38bdf8;--ok:#34d399}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+body{margin:0;background:var(--bg);color:var(--ink);font:17px/1.4 -apple-system,system-ui,sans-serif;padding:calc(env(safe-area-inset-top) + 16px) 16px calc(env(safe-area-inset-bottom) + 32px)}
+.wrap{max-width:520px;margin:0 auto}
+h1{font-size:26px;margin:4px 0 2px}
+.sub{color:var(--mut);margin:0 0 14px;font-size:15px}
+.badge{display:inline-block;padding:6px 12px;border-radius:999px;font-weight:600;font-size:14px;margin-bottom:14px}
+.calf{background:#f59e0b;color:#1c1917}.plain{background:#334155;color:var(--ink)}
+.card{background:var(--card);border-radius:16px;padding:14px 16px;margin:10px 0;display:flex;gap:14px;align-items:flex-start}
+.card.done{opacity:.55}.card.done .t{text-decoration:line-through}
+.chk{width:30px;height:30px;border-radius:50%;border:2px solid var(--mut);flex:none;margin-top:2px;display:flex;align-items:center;justify-content:center;font-size:18px;color:#0f172a}
+.done .chk{background:var(--ok);border-color:var(--ok)}
+.t{font-weight:650;font-size:18px}.d{color:var(--mut);font-size:15px;margin-top:2px}
+.time{color:var(--acc);font-size:13px;font-weight:600}
+a.v{display:inline-block;margin-top:8px;color:var(--acc);text-decoration:none;font-weight:600;font-size:15px;border:1px solid var(--acc);border-radius:10px;padding:5px 12px}
+.note{background:#1e293b;border-left:4px solid var(--acc);border-radius:10px;padding:12px 14px;margin-top:18px;color:var(--mut);font-size:15px}
+.note b{color:var(--ink)}
+button{margin-top:16px;width:100%;padding:12px;border-radius:12px;border:0;background:#334155;color:var(--ink);font-size:16px}
+h2{font-size:13px;letter-spacing:.08em;text-transform:uppercase;color:var(--mut);margin:20px 0 0}
+</style>
+</head>
+<body><div class="wrap">
+<h1>Ankle Routine</h1>
+<p class="sub" id="date"></p>
+<span class="badge" id="badge"></span>
+
+<h2>Every day &middot; ~8 min</h2>
+<div id="daily"></div>
+<div id="calfWrap"><h2>Calf-raise day &middot; +5 min</h2><div id="calf"></div></div>
+
+<div class="note"><b>Keep it pain-free.</b> Stop short of the front-of-ankle pinch. Ball work is also great right before a run. Dr. Bui's email said calf raises 2&ndash;3x/day; every other day is the habit-building version.</div>
+<button onclick="resetDay()">Reset today's checks</button>
+</div>
+<script>
+const daily=[
+ {id:'mob',t:'Ankle mobilization, then banded',d:'15 reps plain, then 15 reps with the band',m:'~3 min',v:['Plain video','https://www.youtube.com/watch?v=K8I7hJh9zvo','Banded video','https://www.youtube.com/watch?v=_27xY33gzI4']},
+ {id:'ball',t:'Midfoot / forefoot ball mobilization',d:'2 minutes (per foot if you have time)',m:'~2-4 min',v:['Video','https://youtu.be/Ickc6T8ORVI']},
+ {id:'mobo',t:'Mobo board foot rocks',d:'Fins on 2/4: 10 rocks. Then fins on 1/3: 10 rocks',m:'~2 min',v:['Video','https://www.youtube.com/watch?v=1amzSzPF-iE']}
+];
+const calf=[{id:'calf',t:'Calf raise, medial / lateral resistance',d:'2 x 15 each way',m:'~5 min',v:['Video','https://www.youtube.com/watch?v=3uhlWefDhds']}];
+const now=new Date(),key=now.getFullYear()+'-'+(now.getMonth()+1)+'-'+now.getDate();
+const anchor=new Date(2026,8,30),today=new Date(now.getFullYear(),now.getMonth(),now.getDate());
+const days=Math.round((today-anchor)/864e5),isCalf=days%2===0;
+document.getElementById('date').textContent=now.toLocaleDateString(undefined,{weekday:'long',month:'long',day:'numeric'});
+const b=document.getElementById('badge');b.textContent=isCalf?'Calf-raise day: full routine (~13 min)':'Daily set only (~8 min)';b.className='badge '+(isCalf?'calf':'plain');
+if(!isCalf)document.getElementById('calfWrap').style.display='none';
+let st=JSON.parse(localStorage.getItem('pt-'+key)||'{}');
+function render(el,items){el.innerHTML='';items.forEach(x=>{
+ const c=document.createElement('div');c.className='card'+(st[x.id]?' done':'');
+ c.innerHTML='<div class="chk">'+(st[x.id]?'\u2713':'')+'</div><div><div class="time">'+x.m+'</div><div class="t">'+x.t+'</div><div class="d">'+x.d+'</div>'+
+  x.v.map((_,i)=>i%2==0?'<a class="v" href="'+x.v[i+1]+'" onclick="event.stopPropagation()">\u25B6 '+x.v[i]+'</a> ':'').join('')+'</div>';
+ c.onclick=()=>{st[x.id]=!st[x.id];localStorage.setItem('pt-'+key,JSON.stringify(st));draw()};
+ el.appendChild(c)})}
+function draw(){render(document.getElementById('daily'),daily);render(document.getElementById('calf'),calf)}
+function resetDay(){st={};localStorage.setItem('pt-'+key,'{}');draw()}
+draw();
+</script>
+</body></html>
